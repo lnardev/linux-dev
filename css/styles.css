@@ -46,6 +46,9 @@
   }
   .searchwrap input:focus{border-color:var(--green-dim);}
   .searchwrap .hint{font-family:var(--mono); font-size:11px; color:var(--dim); border:1px solid var(--line); padding:2px 6px; border-radius:4px;}
+  .github-link{display:flex;align-items:center;opacity:.6;transition:.15s;}
+  .github-link:hover{opacity:1;}
+  .github-link img{width:20px;height:20px;}
 
   /* ---------- Layout ---------- */
   .shell{display:flex; max-width:1400px; margin:0 auto;}
