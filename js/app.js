@@ -21,7 +21,7 @@ async function init(){
   }catch(e){
     document.getElementById('content').innerHTML =
       '<div class="empty-state">⚠ No se pudo cargar <b>js/data.json</b> (' + escapeHtml(e.message) + ').' +
-      '<br>Este sitio ahora se sirve por HTTP: corré <b>python -m http.server</b> en la carpeta del proyecto, o subilo a GitHub Pages.</div>';
+      '<br>Este sitio ahora se sirve por HTTP: corré <b>python -m http.server</b> en la carpeta del proyecto, o subilo a Cloudflare Pages.</div>';
     return;
   }
 
