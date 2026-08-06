@@ -43,7 +43,7 @@
   --green-dim:#0e6b38;
   --amber:#964900;
   --red:#c92f2a;
-  --termbar-bg:rgba(242,246,243,0.92);
+  --termbar-bg:#ffffff;
   --tag-bg:#fdf1dd;
   --tag-line:#e5c394;
   --danger-line:#e2b4b4;
@@ -76,6 +76,7 @@ a{color:var(--green);}
   display:flex; align-items:center; gap:14px;
   transition:background-color .25s ease, border-color .25s ease;
 }
+:root[data-theme="light"] .termbar{backdrop-filter:none;}
 .dots{display:flex; gap:6px;}
 .dots span{width:10px;height:10px;border-radius:50%;display:inline-block;}
 .dots .r{background:#ff5f56;} .dots .y{background:#ffbd2e;} .dots .g{background:#27c93f;}
