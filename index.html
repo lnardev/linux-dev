@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>vps - Manual de operaciones</title>
+<script>
+  (function(){
+    var t;
+    try{ t = localStorage.getItem('theme'); }catch(e){}
+    if(!t){ t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark'; }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
 <link rel="icon" type="image/x-icon" href="/public/favicon.png">
 <link rel="stylesheet" href="./css/styles.css">
 </head>
@@ -11,13 +19,18 @@
 
 <div class="termbar">
   <div class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
-  <div class="path"><b>leo@vps</b>cat manual-autogestion.md</div>
+  <div class="path"><b>admin@vps</b>cat manual-autogestion.md</div>
   <div class="searchwrap"> 
     <input id="search" type="text" placeholder="filtrar comandos..." autocomplete="off">
     <span class="hint">/</span>
   </div>
+  <button id="theme-toggle" class="theme-toggle" aria-label="Cambiar entre tema oscuro y claro" title="Cambiar tema">
+    <svg class="ic ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></svg>
+    <svg class="ic ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+</button>
   <a href="https://github.com/lnardev/linux-dev" target="_blank" rel="noopener noreferrer" class="github-link" aria-label="GitHub">
-    <img src="/public/github_dark.svg" alt="GitHub" width="20" height="20">
+    <img src="/public/github_dark.svg" alt="GitHub" class="gh-ic gh-dark" width="20" height="20">
+    <img src="/public/github_light.svg" alt="GitHub" class="gh-ic gh-light" width="20" height="20">
   </a>
 </div>
 
@@ -36,7 +49,7 @@
 
     <div id="content"></div>
 
-    <footer>17 categorías · generado para uso local · sin dependencias externas</footer>
+    <footer>22 categorías · generado para uso local · sin dependencias externas</footer>
   </main>
 </div>
 

@@ -1,6 +1,6 @@
 # 🖥️ root@vps — Manual de Autogestión de un VPS
 
-> Página estática HTML autocontenida con +180 comandos de Linux para administrar tu propio servidor. Sin dependencias externas, sin build tools, sin frameworks.
+> Página estática HTML autocontenida con +268 comandos de Linux para administrar tu propio servidor. Sin dependencias externas, sin build tools, sin frameworks.
 
 ## ¿Qué es esto?
 
@@ -9,24 +9,27 @@ Una **cheat-sheet interactiva** con todos los comandos de Linux que necesitás p
 ## 🚀 Cómo usarlo
 
 1. Descargá o cloná el repositorio
-2. Abrí `index.html` en cualquier navegador (doble clic o `file://`)
-3. ¡Listo! No hay servidor, build, ni compilación
+2. Serví la carpeta con un servidor local:
+   python -m http.server 8000
+3. Abrí http://localhost:8000 en el navegador
 
 ```
 git clone <tu-repo>
 cd linux-commands
-start index.html    # Windows
-open index.html     # macOS
-xdg-open index.html # Linux
+python -m http.server 8000
+start http://localhost:8000  # Windows
+open http://localhost:8000   # macOS
 ```
+
+> ⚠ Ya no funciona abrir con doble-clic (file://): el navegador bloquea fetch de js/data.json por CORS. Necesitás HTTP (local o GitHub Pages).
 
 ## ✨ Características
 
 - **Búsqueda en tiempo real** — filtrá comandos escribiendo en la barra superior (o presioná `/`)
 - **Copia con un clic** — cada comando tiene un botón "copiar" para pegarlo directo en la terminal
-- **17 categorías** organizadas por tema
+- **22 categorías** organizadas por tema
 - **Sin dependencias** — todo el HTML, CSS y JS vive en un solo archivo
-- **Tema terminal** — interfaz oscura con estética de terminal real
+- **Tema terminal** — modo oscuro y claro con persistencia y preferencia del sistema
 - **Navegación lateral** — TOC sticky con highlight por scroll
 - **Warnings visuales** — comandos destructivos marcados en rojo con advertencias
 - **Responsive** — funciona en desktop y mobile
@@ -35,13 +38,16 @@ xdg-open index.html # Linux
 
 ```
 linux-commands/
-├── index.html    ← Todo vive aquí: HTML + CSS + JS + datos
+├── index.html      ← Página principal (estructura HTML)
+├── css/styles.css  ← Estilos (tema terminal)
+├── js/app.js       ← Datos (array DATA) + lógica de renderizado
+├── js/data.json     ← Contenido de la cheatsheet (datos)
 ├── README.md
 ├── AGENTS.md
 └── CLAUDE.md
 ```
 
-**No hay nada más.** Un solo archivo autocontenido. Así de simple.
+**Sin build tools ni dependencias**: HTML + CSS + JS planos — abrís `index.html` y funciona.
 
 ## 📋 Categorías
 
@@ -49,25 +55,30 @@ linux-commands/
 |---|-----------|-------------|
 | 01 | Sistema e información | Kernel, distro, uptime, hardware |
 | 02 | Archivos, directorios y permisos | Navegación del filesystem y control de acceso |
-| 03 | Procesos y rendimiento | CPU, RAM, matar procesos colgados |
-| 04 | Red y conectividad | Diagnóstico, puertos, DNS |
-| 05 | Firewall (UFW) | Primera línea de defensa del VPS |
-| 06 | SSH y acceso remoto | Endurecimiento y autenticación por llaves |
-| 07 | Nginx | Servidor web / proxy reverso, SSL |
-| 08 | Docker | Contenedores, compose, imágenes |
-| 09 | Systemd (servicios) | Control de servicios, autoarranque |
-| 10 | Logs y journalctl | Diagnóstico de fallas |
-| 11 | Cron y tareas programadas | Automatización de backups y limpiezas |
-| 12 | Gestión de paquetes | apt, dpkg, actualizaciones |
-| 13 | Seguridad | fail2ban, hardening, auditorías |
-| 14 | Backups y transferencia | rsync, dumps de BD, programación |
-| 15 | Monitoreo y disco | Uso de disco, RAM, herramientas visuales |
-| 16 | Bash y configuración de shell | Alias, variables, prompt, historial |
-| 17 | PM2 (gestor de procesos Node.js) | Reinicios, cluster, logs de Node |
+| 03 | Procesamiento de texto (grep, sed, awk) | Buscar, reemplazar y extraer información de archivos |
+| 04 | Procesos y rendimiento | CPU, RAM, matar procesos colgados |
+| 05 | Swap (memoria virtual) | Respaldo de RAM para VPS con poca memoria |
+| 06 | Red y conectividad | Diagnóstico, puertos, DNS |
+| 07 | Firewall (UFW) | Primera línea de defensa del VPS |
+| 08 | iptables (firewall del kernel) | Reglas directas, política por defecto, persistencia |
+| 09 | SSH y acceso remoto | Endurecimiento y autenticación por llaves |
+| 10 | Nginx | Servidor web / proxy reverso, SSL |
+| 11 | Docker | Contenedores, volúmenes, redes, compose |
+| 12 | Bases de datos (MySQL/MariaDB) | Conectar, crear usuarios, permisos |
+| 13 | Systemd (servicios) | Control de servicios, autoarranque |
+| 14 | Logs y journalctl | Diagnóstico de fallas |
+| 15 | Cron y tareas programadas | Automatización de backups y limpiezas |
+| 16 | Gestión de paquetes | apt, dpkg, actualizaciones |
+| 17 | Seguridad | fail2ban, hardening, auditorías |
+| 18 | Backups y transferencia | rsync, dumps de BD, programación |
+| 19 | Monitoreo y disco | Uso de disco, RAM, herramientas visuales |
+| 20 | Bash y configuración de shell | Alias, variables, prompt, historial |
+| 21 | PM2 (gestor de procesos Node.js) | Reinicios, cluster, logs de Node |
+| 22 | Git y despliegue | Clonar, deploy keys, actualizar producción |
 
 ## 🛠️ Cómo editar / contribuir
 
-Todo el contenido vive en el array `DATA` dentro del `<script>` de `index.html` (~línea 173).
+Todo el contenido vive en `js/data.json` (un array JSON de categorías con el mismo esquema de siempre). `js/app.js` solo carga y renderiza.
 
 Cada categoría tiene esta estructura:
 
@@ -92,8 +103,9 @@ Cada categoría tiene esta estructura:
 
 - El contenido está en **español** — mantener consistencia
 - **No escapar** `cmd` ni `desc` — el JS lo hace automáticamente con `escapeHtml`/`escapeAttr`
-- Si agregás o quitás una categoría, **actualizá el número en el footer** (`17 categorías · ...`)
+- Si agregás o quitás una categoría, **actualizá el número en el footer** (`22 categorías · ...`)
 - Para que un comando sea buscable, incluí palabras clave en `desc` — el filtro busca en `cmd + desc`
+- Al editar `js/data.json` respetá JSON válido: comillas dobles en claves y strings, sin comas finales, sin comentarios.
 
 ## 🧪 Verificación
 
