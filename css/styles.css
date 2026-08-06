@@ -93,6 +93,9 @@ a{color:var(--green);}
 .github-link{display:flex;align-items:center;opacity:.6;transition:.15s;}
 .github-link:hover{opacity:1;}
 .github-link img{width:20px;height:20px;}
+.github-link img.gh-light{display:none;}
+:root[data-theme="light"] .github-link img.gh-dark{display:none;}
+:root[data-theme="light"] .github-link img.gh-light{display:inline-block;}
 
 /* ---------- Theme toggle ---------- */
 .theme-toggle{
