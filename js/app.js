@@ -136,7 +136,21 @@ const DATA = [
     {cmd:"docker compose up -d", desc:"Levanta todos los servicios definidos en docker-compose.yml."},
     {cmd:"docker compose down", desc:"Detiene y elimina los contenedores del compose."},
     {cmd:"docker compose logs -f servicio", desc:"Sigue los logs de un servicio específico del compose."},
-    {cmd:"docker stats", desc:"Uso de CPU/RAM en tiempo real de cada contenedor."}
+    {cmd:"docker stats", desc:"Uso de CPU/RAM en tiempo real de cada contenedor."},
+    {cmd:"docker volume ls", desc:"Lista los volúmenes creados (datos persistentes gestionados por Docker)."},
+    {cmd:"docker volume create datos_app", desc:"Crea un volumen con nombre para persistir datos."},
+    {cmd:"docker volume inspect datos_app", desc:"Muestra el punto de montaje real y detalles del volumen.", flags:"Mirá el campo <b>Mountpoint</b>: ahí vive la data dentro del host."},
+    {cmd:"docker run -d -v datos_app:/var/lib/mysql mysql:8", desc:"Monta un volumen nombrado en el contenedor.", flags:"Formato <b>-v nombre_volumen:/ruta/dentro</b>. Si la ruta no existe, Docker la crea."},
+    {cmd:"docker run -d -v /home/usuario/midatos:/datos nginx", desc:"Bind mount: mapea un directorio real del host al contenedor.", flags:"Formato <b>-v /ruta/del/host:/ruta/dentro</b>. Diferencia clave vs. volumen nombrado: acá ves y editas los archivos directamente en el servidor."},
+    {cmd:"docker volume rm datos_app", desc:"Elimina un volumen concreto.", warn:"Borra TODOS los datos que contenía. No hay papelera en Docker."},
+    {cmd:"docker volume prune", desc:"Elimina todos los volúmenes que ningún contenedor esté usando.", warn:"PELIGRO: borra en masa. Revisá antes con <b>docker volume ls</b>. Ojo: docker system prune -a NO borra volúmenes, por eso existe este comando."},
+    {cmd:"docker network ls", desc:"Lista las redes de Docker (bridge, host, none)."},
+    {cmd:"docker network create mi_red", desc:"Crea una red bridge propia para aislar y comunicar tus contenedores.", flags:"Los contenedores de la MISMA red se hablan por NOMBRE, no por IP (DNS interno). Si tu app usa una BD en otro contenedor, conectá ambos a la red y usá <b>db:5432</b> en vez de una IP."},
+    {cmd:"docker run -d --network mi_red --name api miapp", desc:"Levanta un contenedor conectado a una red específica."},
+    {cmd:"docker network connect mi_red contenedor", desc:"Conecta un contenedor ya existente a una red.", flags:"Así un contenedor puede estar en VARIAS redes a la vez."},
+    {cmd:"docker network disconnect mi_red contenedor", desc:"Desconecta un contenedor de una red."},
+    {cmd:"docker network inspect mi_red", desc:"Muestra la configuración de la red y los contenedores conectados."},
+    {cmd:"docker network rm mi_red", desc:"Elimina una red.", warn:"Solo funciona si ningún contenedor sigue conectado."}
   ]
 },
 {
