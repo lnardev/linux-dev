@@ -119,6 +119,29 @@ const DATA = [
   ]
 },
 {
+  id:"iptables", title:"iptables (firewall del kernel)", desc:"El firewall REAL de Linux: reglas por cadena (INPUT/OUTPUT/FORWARD). UFW es solo un frontend de esto: para control fino vas directo a iptables.",
+  items:[
+    {cmd:"sudo iptables -L -n -v", desc:"Lista todas las reglas activas con contadores de paquetes."},
+    {cmd:"sudo iptables -L -n --line-numbers", desc:"Muestra las reglas numeradas: necesario para borrar por posición."},
+    {cmd:"sudo iptables -A INPUT -i lo -j ACCEPT", desc:"Permite el tráfico del loopback (localhost).", flags:"Regla #1 SIEMPRE: sin esto tu propia máquina no puede hablarse a sí misma."},
+    {cmd:"sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT", desc:"Permite las conexiones YA establecidas y sus respuestas.", flags:"Regla #2 CRÍTICA: sin esto, todo tráfico saliente se corta al volver."},
+    {cmd:"sudo iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT", desc:"Abre el puerto 80 (HTTP) para el mundo.", flags:"El <b>-m tcp</b> explicita el módulo: en iptables moderno se carga solo con <b>-p tcp</b>, pero el formato explícito es más claro en guías y scripts."},
+    {cmd:"sudo iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT", desc:"Abre el puerto 443 (HTTPS) para el mundo."},
+    {cmd:"sudo iptables -A INPUT -p tcp -m tcp --dport 8080 -j ACCEPT", desc:"Abre el puerto 8080 (tu app web)."},
+    {cmd:"sudo iptables -A INPUT -s 172.20.1.100 -p tcp -m tcp --dport 22 -j ACCEPT", desc:"Permite SSH SOLO desde tu IP de administración.", flags:"<b>-s</b> = source: si restringís SSH por IP, las botnets de fuerza bruta ni te tocan."},
+    {cmd:"sudo iptables -A INPUT -s 172.20.1.100 -p icmp -j ACCEPT", desc:"Permite ping solo desde tu IP de administración."},
+    {cmd:"sudo iptables -A INPUT -s 172.20.1.100 -j ACCEPT", desc:"Regla catch-all: permite TODO el tráfico desde tu IP de confianza."},
+    {cmd:"sudo iptables -A INPUT -p udp -m udp --dport 161 -j ACCEPT", desc:"Abre SNMP (UDP 161) para monitoreo.", warn:"SNMP abierto al mundo permite enumerar tu servidor. Mejor restringilo anteponiendo <b>-s 172.20.1.100</b>, como en las reglas de SSH."},
+    {cmd:"sudo iptables -P INPUT DROP", desc:"POLÍTICA POR DEFECTO: descarta todo lo que no tenga regla explícita.", warn:"Corré esto al FINAL, con loopback, conntrack y SSH ya permitidos. Si lo corrés antes, te quedás AFUERA del servidor.", danger:true},
+    {cmd:"sudo iptables -D INPUT 5", desc:"Borra la regla número 5 de la cadena INPUT.", flags:"Usá <b>--line-numbers</b> primero para conocer el número exacto."},
+    {cmd:"sudo iptables -I INPUT 1 -s 1.2.3.4 -j DROP", desc:"Inserta una regla en la posición 1: bloquea una IP antes de las demás.", flags:"El orden importa: iptables evalúa de arriba a abajo y la PRIMERA coincidencia gana."},
+    {cmd:"sudo iptables -F", desc:"FLUSH: borra TODAS las reglas de todas las cadenas.", warn:"Con política DROP dejás de responder todo; con política ACCEPT quedás desprotegido. Solo para emergencias.", danger:true},
+    {cmd:"sudo iptables-save > /etc/iptables/rules.v4", desc:"Guarda las reglas actuales a disco para restaurarlas tras un reinicio.", flags:"Sin esto, todas tus reglas se PIERDEN al reiniciar el VPS."},
+    {cmd:"sudo iptables-restore < /etc/iptables/rules.v4", desc:"Restaura las reglas desde el archivo guardado."},
+    {cmd:"sudo apt install iptables-persistent", desc:"Instala el servicio que carga las reglas guardadas automáticamente en cada boot.", flags:"Después: <b>sudo netfilter-persistent save</b> guarda el estado actual. Este es el paso que hace tus reglas PERMANENTES."}
+  ]
+},
+{
   id:"ssh", title:"SSH y acceso remoto", desc:"Endurecer el acceso remoto es el paso de seguridad más importante en un VPS.",
   items:[
     {cmd:"ssh usuario@ip -p 22", desc:"Conexión básica por SSH a un servidor."},
