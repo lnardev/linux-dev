@@ -38,6 +38,23 @@ const DATA = [
   ]
 },
 {
+  id:"texto", title:"Procesamiento de texto (grep, sed, awk)", desc:"La caja de herramientas del administrador: buscar, reemplazar y extraer información de archivos grandes.",
+  items:[
+    {cmd:"grep -rn \"texto\" /ruta/", desc:"Busca recursivamente mostrando archivo y número de línea."},
+    {cmd:"grep -i \"texto\" archivo", desc:"Búsqueda sin distinguir mayúsculas/minúsculas."},
+    {cmd:"grep -v \"texto\" archivo", desc:"Invierte la búsqueda: muestra las líneas que NO contienen el texto."},
+    {cmd:"sed -i 's/viejo/nuevo/g' archivo", desc:"Reemplaza todas las ocurrencias en el archivo, in-place.", flags:"<b>s/</b>=sustituir, <b>g</b>=todas las ocurrencias por línea. Sin -i solo previsualiza."},
+    {cmd:"awk '{print $2}' archivo", desc:"Imprime la segunda columna de cada línea (separador por defecto: espacio).", flags:"Cambiá el separador con <b>-F:</b> (ej. <b>awk -F: '{print $1}' /etc/passwd</b>)."},
+    {cmd:"cut -d: -f1 /etc/passwd", desc:"Corta cada línea por un delimitador y extrae el campo indicado."},
+    {cmd:"cat archivo | sort | uniq -c | sort -rn", desc:"Pipeline clásico: cuenta ocurrencias y las ordena de mayor a menor.", flags:"El <b>pipeline</b> (|) encadena comandos: la salida de uno es la entrada del otro."},
+    {cmd:"wc -l archivo", desc:"Cuenta las líneas de un archivo."},
+    {cmd:"head -n 20 archivo", desc:"Primeras 20 líneas de un archivo."},
+    {cmd:"tail -n 20 archivo", desc:"Últimas 20 líneas (complemento de head)."},
+    {cmd:"less archivo", desc:"Navegador de archivos grandes con scroll y búsqueda.", flags:"Dentro de less: <b>/texto</b> busca, <b>q</b> sale, <b>G</b> va al final."},
+    {cmd:"grep -rn \"error\" /var/log/ | head -20", desc:"Busca errores en los logs y limita la salida: evita que el terminal explote."}
+  ]
+},
+{
   id:"procesos", title:"Procesos y rendimiento", desc:"Ver qué está consumiendo CPU/RAM y matar procesos colgados.",
   items:[
     {cmd:"top", desc:"Monitor interactivo de procesos, CPU y memoria en tiempo real."},
@@ -53,6 +70,21 @@ const DATA = [
     {cmd:"nohup comando &", desc:"Ejecuta un proceso en segundo plano que sobrevive al cerrar la sesión SSH."},
     {cmd:"iotop", desc:"Muestra qué proceso está generando más I/O de disco en tiempo real.", flags:"Instalar con: <b>sudo apt install iotop</b>. Requiere sudo para ver todos los procesos."},
     {cmd:"renice -n 5 -p PID", desc:"Cambia la prioridad de un proceso que ya está corriendo, sin reiniciarlo."}
+  ]
+},
+{
+  id:"swap", title:"Swap (memoria virtual)", desc:"La red de seguridad para VPS con poca RAM: cuando la memoria se llena, Linux usa swap en vez de matar procesos.",
+  items:[
+    {cmd:"free -h", desc:"Verifica la RAM y el swap actual antes de empezar."},
+    {cmd:"sudo fallocate -l 2G /swapfile", desc:"Crea un archivo de 2GB que usará el sistema como memoria extra.", flags:"Tamaño recomendado: el doble de tu RAM en VPS de hasta 2GB."},
+    {cmd:"sudo chmod 600 /swapfile", desc:"Permisos restrictivos: el swapfile puede contener datos sensibles (solo root)."},
+    {cmd:"sudo mkswap /swapfile", desc:"Formatea el archivo como área de intercambio (swap)."},
+    {cmd:"sudo swapon /swapfile", desc:"Activa el swap inmediatamente."},
+    {cmd:"sudo swapon --show", desc:"Confirma que el swap está activo y cuánto espacio tiene."},
+    {cmd:"echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab", desc:"Hace el swap PERMANENTE: sin esto se pierde al reiniciar.", flags:"La línea en <b>/etc/fstab</b> monta el swapfile automáticamente en cada boot."},
+    {cmd:"sudo sysctl vm.swappiness=10", desc:"Ajusta la agresividad del swap (0-100).", flags:"<b>swappiness=10</b> usa swap solo cuando hace falta; valores altos (60+) intercambian más de la cuenta y van más lento."},
+    {cmd:"sudo swapoff /swapfile", desc:"Desactiva el swap antes de eliminarlo o redimensionarlo."},
+    {cmd:"sudo rm /swapfile", desc:"Elimina el archivo de swap.", warn:"Desactivá el swap ANTES (swapoff) y quitá la línea de /etc/fstab, o se recrea al reiniciar."}
   ]
 },
 {
@@ -151,6 +183,23 @@ const DATA = [
     {cmd:"docker network disconnect mi_red contenedor", desc:"Desconecta un contenedor de una red."},
     {cmd:"docker network inspect mi_red", desc:"Muestra la configuración de la red y los contenedores conectados."},
     {cmd:"docker network rm mi_red", desc:"Elimina una red.", warn:"Solo funciona si ningún contenedor sigue conectado."}
+  ]
+},
+{
+  id:"bases-datos", title:"Bases de datos (MySQL/MariaDB)", desc:"Conectar, crear usuarios y dar permisos: el día a día de cualquier app con base de datos.",
+  items:[
+    {cmd:"sudo systemctl status mysql", desc:"Estado del servicio de base de datos (MariaDB/MySQL)."},
+    {cmd:"sudo mysql_secure_installation", desc:"Endurece la instalación inicial: quita usuarios anónimos y bases de prueba.", flags:"Corré esto SIEMPRE después de instalar MySQL/MariaDB."},
+    {cmd:"sudo mysql", desc:"Entra al shell de MySQL como root SIN contraseña.", flags:"En Debian/Ubuntu el root usa <b>auth_socket</b>: solo funciona con sudo, directamente desde el sistema."},
+    {cmd:"mysql -u usuario -p", desc:"Conecta a MySQL como usuario normal pidiendo contraseña."},
+    {cmd:"SHOW DATABASES;", desc:"Lista las bases de datos existentes."},
+    {cmd:"CREATE DATABASE miapp CHARACTER SET utf8mb4;", desc:"Crea una base de datos nueva.", flags:"<b>utf8mb4</b> soporta emojis y caracteres especiales: es el estándar moderno."},
+    {cmd:"CREATE USER 'miapp'@'localhost' IDENTIFIED BY 'clave_segura';", desc:"Crea un usuario de BD.", flags:"Nunca uses la contraseña root en tu app: creá un usuario dedicado con permisos mínimos."},
+    {cmd:"GRANT ALL PRIVILEGES ON miapp.* TO 'miapp'@'localhost';", desc:"Da permisos totales SOLO sobre la BD miapp.", flags:"El <b>.*</b> limita los permisos a esa base: no otorgues ALL global sin necesidad."},
+    {cmd:"FLUSH PRIVILEGES;", desc:"Aplica los cambios de permisos sin reiniciar el servicio."},
+    {cmd:"USE miapp; SHOW TABLES;", desc:"Selecciona una BD y lista sus tablas."},
+    {cmd:"ALTER USER 'miapp'@'localhost' IDENTIFIED BY 'nueva_clave';", desc:"Cambia la contraseña de un usuario.", warn:"Actualizá también la config de tu app, o se queda sin conexión."},
+    {cmd:"sudo -u postgres psql", desc:"Entra al shell de PostgreSQL (la alternativa de BD que ya aparece en tus backups)."}
   ]
 },
 {
@@ -287,6 +336,22 @@ const DATA = [
     {cmd:"pm2 resurrect", desc:"Restaura los procesos guardados previamente con pm2 save."},
     {cmd:"pm2 flush", desc:"Limpia todos los logs acumulados de PM2."},
     {cmd:"pm2 delete all", desc:"Elimina TODAS las apps gestionadas por PM2.", danger:true, warn:"Corta todos los procesos Node en producción. Verificá dos veces antes de correrlo."}
+  ]
+},
+{
+  id:"git", title:"Git y despliegue", desc:"Cómo llega tu código al servidor: clonar, actualizar y hacer deploy desde el repo.",
+  items:[
+    {cmd:"git clone git@github.com:usuario/mirepo.git", desc:"Clona tu repositorio por SSH (requiere deploy key configurada)."},
+    {cmd:"git pull origin main", desc:"Actualiza el código en producción con los últimos cambios.", flags:"Es el corazón del deploy: <b>pull → instalar dependencias → reiniciar el servicio</b>."},
+    {cmd:"git status", desc:"Estado del working directory: qué cambió y qué falta commitear."},
+    {cmd:"git log --oneline -10", desc:"Últimos 10 commits en una línea cada uno."},
+    {cmd:"git stash", desc:"Guarda temporalmente cambios sin commitear para poder hacer pull limpio."},
+    {cmd:"git stash pop", desc:"Recupera los cambios que guardaste con stash."},
+    {cmd:"git remote -v", desc:"Muestra los repositorios remotos configurados (origin, etc)."},
+    {cmd:"git checkout -- .", desc:"Descarta TODOS los cambios locales sin commitear.", warn:"Pérdida irreversible de cambios no commiteados."},
+    {cmd:"git reset --hard origin/main", desc:"Fuerza el servidor al estado exacto del remoto, borrando diferencias.", danger:true, warn:"Sobrescribe cualquier cambio local. Usar solo cuando sabés que el remoto es la verdad."},
+    {cmd:"cat ~/.ssh/id_ed25519.pub", desc:"Obtiene tu llave pública para registrarla como <b>deploy key</b> en GitHub (repo read-only).", flags:"Las deploy keys con acceso read-only evitan que el servidor pueda modificar tu repo."},
+    {cmd:"git pull origin main && npm install && pm2 restart miapp", desc:"Ejemplo de deploy completo en una línea para una app Node.", flags:"Cadena de comandos con <b>&&</b>: solo continúa si el paso anterior funcionó."}
   ]
 }
 ];
