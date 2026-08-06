@@ -9,16 +9,19 @@ Una **cheat-sheet interactiva** con todos los comandos de Linux que necesitás p
 ## 🚀 Cómo usarlo
 
 1. Descargá o cloná el repositorio
-2. Abrí `index.html` en cualquier navegador (doble clic o `file://`)
-3. ¡Listo! No hay servidor, build, ni compilación
+2. Serví la carpeta con un servidor local:
+   python -m http.server 8000
+3. Abrí http://localhost:8000 en el navegador
 
 ```
 git clone <tu-repo>
 cd linux-commands
-start index.html    # Windows
-open index.html     # macOS
-xdg-open index.html # Linux
+python -m http.server 8000
+start http://localhost:8000  # Windows
+open http://localhost:8000   # macOS
 ```
+
+> ⚠ Ya no funciona abrir con doble-clic (file://): el navegador bloquea fetch de js/data.json por CORS. Necesitás HTTP (local o GitHub Pages).
 
 ## ✨ Características
 
@@ -38,6 +41,7 @@ linux-commands/
 ├── index.html      ← Página principal (estructura HTML)
 ├── css/styles.css  ← Estilos (tema terminal)
 ├── js/app.js       ← Datos (array DATA) + lógica de renderizado
+├── js/data.json     ← Contenido de la cheatsheet (datos)
 ├── README.md
 ├── AGENTS.md
 └── CLAUDE.md
@@ -74,7 +78,7 @@ linux-commands/
 
 ## 🛠️ Cómo editar / contribuir
 
-Todo el contenido vive en el array `DATA` de `js/app.js`.
+Todo el contenido vive en `js/data.json` (un array JSON de categorías con el mismo esquema de siempre). `js/app.js` solo carga y renderiza.
 
 Cada categoría tiene esta estructura:
 
@@ -101,6 +105,7 @@ Cada categoría tiene esta estructura:
 - **No escapar** `cmd` ni `desc` — el JS lo hace automáticamente con `escapeHtml`/`escapeAttr`
 - Si agregás o quitás una categoría, **actualizá el número en el footer** (`22 categorías · ...`)
 - Para que un comando sea buscable, incluí palabras clave en `desc` — el filtro busca en `cmd + desc`
+- Al editar `js/data.json` respetá JSON válido: comillas dobles en claves y strings, sin comas finales, sin comentarios.
 
 ## 🧪 Verificación
 

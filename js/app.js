@@ -1,471 +1,7 @@
-const DATA = [
-{
-  id:"sistema", title:"Sistema e información", desc:"Lo primero para saber en qué estado está el servidor: kernel, distro, uptime, hardware.",
-  items:[
-    {cmd:"uname -a", desc:"Muestra kernel, arquitectura y nombre de host del sistema."},
-    {cmd:"lsb_release -a", desc:"Versión exacta de la distribución (Ubuntu/Debian)."},
-    {cmd:"hostnamectl", desc:"Info del hostname, SO, kernel y virtualización en un solo lugar."},
-    {cmd:"uptime", desc:"Tiempo encendido y carga promedio del sistema (load average)."},
-    {cmd:"whoami", desc:"Usuario actual con el que estás logueado."},
-    {cmd:"who", desc:"Usuarios conectados actualmente por SSH u otras sesiones."},
-    {cmd:"last -a", desc:"Historial de inicios de sesión, útil para auditar accesos."},
-    {cmd:"date", desc:"Fecha y hora del servidor; comparala con tu zona horaria."},
-    {cmd:"timedatectl", desc:"Ver y configurar zona horaria y sincronización NTP."},
-    {cmd:"reboot", desc:"Reinicia el servidor.", flags:"Requiere sudo. Corta todas las conexiones activas."},
-    {cmd:"shutdown -h now", desc:"Apaga el servidor inmediatamente.", warn:"Irreversible sin acceso a la consola del proveedor."}
-  ]
-},
-{
-  id:"archivos", title:"Archivos, directorios y permisos", desc:"Navegación del filesystem y control de quién puede leer, escribir o ejecutar.",
-  items:[
-    {cmd:"ls -lah", desc:"Lista archivos con permisos, tamaño y ocultos, en formato legible."},
-    {cmd:"cd /ruta", desc:"Cambia de directorio."},
-    {cmd:"pwd", desc:"Muestra el directorio actual."},
-    {cmd:"find / -name \"archivo\"", desc:"Busca un archivo por nombre en todo el sistema."},
-    {cmd:"find . -mtime -1", desc:"Archivos modificados en las últimas 24 horas."},
-    {cmd:"du -sh *", desc:"Tamaño de cada carpeta/archivo en el directorio actual."},
-    {cmd:"df -h", desc:"Espacio usado y disponible por partición/disco."},
-    {cmd:"lsblk", desc:"Lista discos y particiones del sistema en forma de árbol, con tamaños y puntos de montaje."},
-    {cmd:"chmod 755 archivo", desc:"Cambia permisos: dueño rwx, grupo y otros r-x.", flags:"<b>r</b>=leer <b>w</b>=escribir <b>x</b>=ejecutar. 644 para archivos, 755 para carpetas/scripts."},
-    {cmd:"chown usuario:grupo archivo", desc:"Cambia el propietario y grupo de un archivo o carpeta."},
-    {cmd:"chown -R www-data:www-data /var/www", desc:"Cambia propietario recursivamente (típico para Nginx)."},
-    {cmd:"tar -czvf backup.tar.gz carpeta/", desc:"Comprime una carpeta en un .tar.gz."},
-    {cmd:"tar -xzvf backup.tar.gz", desc:"Descomprime un .tar.gz."},
-    {cmd:"cp -r origen/ destino/", desc:"Copia carpetas de forma recursiva."},
-    {cmd:"rsync -avz origen/ destino/", desc:"Sincroniza archivos de forma incremental, ideal para backups."},
-    {cmd:"ln -s /ruta/real /ruta/link", desc:"Crea un enlace simbólico (symlink)."},
-    {cmd:"rm -rf carpeta/", desc:"Elimina una carpeta y su contenido sin confirmación.", danger:true, warn:"No hay papelera de reciclaje. Verificá la ruta dos veces."}
-  ]
-},
-{
-  id:"texto", title:"Procesamiento de texto (grep, sed, awk)", desc:"La caja de herramientas del administrador: buscar, reemplazar y extraer información de archivos grandes.",
-  items:[
-    {cmd:"grep -rn \"texto\" /ruta/", desc:"Busca recursivamente mostrando archivo y número de línea."},
-    {cmd:"grep -i \"texto\" archivo", desc:"Búsqueda sin distinguir mayúsculas/minúsculas."},
-    {cmd:"grep -v \"texto\" archivo", desc:"Invierte la búsqueda: muestra las líneas que NO contienen el texto."},
-    {cmd:"sed -i 's/viejo/nuevo/g' archivo", desc:"Reemplaza todas las ocurrencias en el archivo, in-place.", flags:"<b>s/</b>=sustituir, <b>g</b>=todas las ocurrencias por línea. Sin -i solo previsualiza."},
-    {cmd:"awk '{print $2}' archivo", desc:"Imprime la segunda columna de cada línea (separador por defecto: espacio).", flags:"Cambiá el separador con <b>-F:</b> (ej. <b>awk -F: '{print $1}' /etc/passwd</b>)."},
-    {cmd:"cut -d: -f1 /etc/passwd", desc:"Corta cada línea por un delimitador y extrae el campo indicado."},
-    {cmd:"cat archivo | sort | uniq -c | sort -rn", desc:"Pipeline clásico: cuenta ocurrencias y las ordena de mayor a menor.", flags:"El <b>pipeline</b> (|) encadena comandos: la salida de uno es la entrada del otro."},
-    {cmd:"wc -l archivo", desc:"Cuenta las líneas de un archivo."},
-    {cmd:"head -n 20 archivo", desc:"Primeras 20 líneas de un archivo."},
-    {cmd:"tail -n 20 archivo", desc:"Últimas 20 líneas (complemento de head)."},
-    {cmd:"less archivo", desc:"Navegador de archivos grandes con scroll y búsqueda.", flags:"Dentro de less: <b>/texto</b> busca, <b>q</b> sale, <b>G</b> va al final."},
-    {cmd:"grep -rn \"error\" /var/log/ | head -20", desc:"Busca errores en los logs y limita la salida: evita que el terminal explote."}
-  ]
-},
-{
-  id:"procesos", title:"Procesos y rendimiento", desc:"Ver qué está consumiendo CPU/RAM y matar procesos colgados.",
-  items:[
-    {cmd:"top", desc:"Monitor interactivo de procesos, CPU y memoria en tiempo real."},
-    {cmd:"htop", desc:"Versión mejorada de top con interfaz a color.", flags:"Instalar con: <b>sudo apt install htop</b>"},
-    {cmd:"ps aux", desc:"Lista todos los procesos corriendo con su PID y consumo."},
-    {cmd:"ps aux | grep nginx", desc:"Filtra procesos por nombre, útil para encontrar un PID puntual."},
-    {cmd:"kill -9 PID", desc:"Fuerza el cierre de un proceso por su PID.", warn:"No guarda estado; usar SIGTERM (kill sin -9) primero si es posible."},
-    {cmd:"pkill -f nombre_proceso", desc:"Mata todos los procesos que coincidan con un nombre."},
-    {cmd:"free -h", desc:"Memoria RAM y swap usada/disponible en formato legible."},
-    {cmd:"nproc", desc:"Cantidad de núcleos de CPU disponibles."},
-    {cmd:"iostat -x 2", desc:"Uso de disco (I/O) actualizado cada 2 segundos."},
-    {cmd:"nice -n 10 comando", desc:"Ejecuta un comando con menor prioridad de CPU."},
-    {cmd:"nohup comando &", desc:"Ejecuta un proceso en segundo plano que sobrevive al cerrar la sesión SSH."},
-    {cmd:"iotop", desc:"Muestra qué proceso está generando más I/O de disco en tiempo real.", flags:"Instalar con: <b>sudo apt install iotop</b>. Requiere sudo para ver todos los procesos."},
-    {cmd:"renice -n 5 -p PID", desc:"Cambia la prioridad de un proceso que ya está corriendo, sin reiniciarlo."}
-  ]
-},
-{
-  id:"swap", title:"Swap (memoria virtual)", desc:"La red de seguridad para VPS con poca RAM: cuando la memoria se llena, Linux usa swap en vez de matar procesos.",
-  items:[
-    {cmd:"free -h", desc:"Verifica la RAM y el swap actual antes de empezar."},
-    {cmd:"sudo fallocate -l 2G /swapfile", desc:"Crea un archivo de 2GB que usará el sistema como memoria extra.", flags:"Tamaño recomendado: el doble de tu RAM en VPS de hasta 2GB."},
-    {cmd:"sudo chmod 600 /swapfile", desc:"Permisos restrictivos: el swapfile puede contener datos sensibles (solo root)."},
-    {cmd:"sudo mkswap /swapfile", desc:"Formatea el archivo como área de intercambio (swap)."},
-    {cmd:"sudo swapon /swapfile", desc:"Activa el swap inmediatamente."},
-    {cmd:"sudo swapon --show", desc:"Confirma que el swap está activo y cuánto espacio tiene."},
-    {cmd:"echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab", desc:"Hace el swap PERMANENTE: sin esto se pierde al reiniciar.", flags:"La línea en <b>/etc/fstab</b> monta el swapfile automáticamente en cada boot."},
-    {cmd:"sudo sysctl vm.swappiness=10", desc:"Ajusta la agresividad del swap (0-100).", flags:"<b>swappiness=10</b> usa swap solo cuando hace falta; valores altos (60+) intercambian más de la cuenta y van más lento."},
-    {cmd:"sudo swapoff /swapfile", desc:"Desactiva el swap antes de eliminarlo o redimensionarlo."},
-    {cmd:"sudo rm /swapfile", desc:"Elimina el archivo de swap.", warn:"Desactivá el swap ANTES (swapoff) y quitá la línea de /etc/fstab, o se recrea al reiniciar."}
-  ]
-},
-{
-  id:"red", title:"Red y conectividad", desc:"Diagnóstico de red, puertos abiertos y quién está conectado a qué.",
-  items:[
-    {cmd:"ip a", desc:"Muestra las interfaces de red y sus direcciones IP."},
-    {cmd:"ss -tulpn", desc:"Puertos abiertos (TCP/UDP) y qué proceso los está usando.", flags:"Reemplaza al viejo <b>netstat</b>."},
-    {cmd:"curl -I https://tudominio.com", desc:"Verifica que un sitio responda y ver sus headers HTTP."},
-    {cmd:"ping -c 4 8.8.8.8", desc:"Prueba conectividad hacia una IP, 4 paquetes."},
-    {cmd:"traceroute dominio.com", desc:"Muestra la ruta de saltos hasta un destino."},
-    {cmd:"dig dominio.com", desc:"Consulta registros DNS de un dominio."},
-    {cmd:"nslookup dominio.com", desc:"Alternativa simple para resolver un dominio a IP."},
-    {cmd:"wget https://url/archivo", desc:"Descarga un archivo directo desde una URL."},
-    {cmd:"scp archivo usuario@ip:/ruta", desc:"Copia un archivo a otro servidor por SSH."},
-    {cmd:"nc -zv ip puerto", desc:"Verifica si un puerto específico está abierto (netcat)."}
-  ]
-},
-{
-  id:"ufw", title:"Firewall (UFW)", desc:"Uncomplicated Firewall: la primera línea de defensa del VPS. Configuralo antes de exponer cualquier servicio.",
-  items:[
-    {cmd:"sudo ufw status verbose", desc:"Ver el estado del firewall y las reglas activas."},
-    {cmd:"sudo ufw enable", desc:"Activa el firewall.", warn:"Asegurate de permitir el puerto SSH ANTES de activar, o te quedás afuera."},
-    {cmd:"sudo ufw disable", desc:"Desactiva el firewall por completo."},
-    {cmd:"sudo ufw allow 22/tcp", desc:"Permite el puerto SSH (cambialo si usás uno custom)."},
-    {cmd:"sudo ufw allow OpenSSH", desc:"Igual que arriba pero usando el perfil registrado por OpenSSH."},
-    {cmd:"sudo ufw allow 80,443/tcp", desc:"Permite tráfico HTTP y HTTPS para Nginx."},
-    {cmd:"sudo ufw allow from 190.1.2.3", desc:"Permite acceso solo desde una IP específica (útil para admin panels)."},
-    {cmd:"sudo ufw deny 3306", desc:"Bloquea explícitamente un puerto, por ejemplo MySQL hacia afuera."},
-    {cmd:"sudo ufw delete allow 8080", desc:"Elimina una regla previamente creada."},
-    {cmd:"sudo ufw app list", desc:"Lista perfiles de aplicaciones ya registrados (Nginx Full, OpenSSH, etc)."},
-    {cmd:"sudo ufw logging on", desc:"Activa el registro de conexiones bloqueadas en /var/log/ufw.log."}
-  ]
-},
-{
-  id:"iptables", title:"iptables (firewall del kernel)", desc:"El firewall REAL de Linux: reglas por cadena (INPUT/OUTPUT/FORWARD). UFW es solo un frontend de esto: para control fino vas directo a iptables.",
-  items:[
-    {cmd:"sudo iptables -L -n -v", desc:"Lista todas las reglas activas con contadores de paquetes."},
-    {cmd:"sudo iptables -L -n --line-numbers", desc:"Muestra las reglas numeradas: necesario para borrar por posición."},
-    {cmd:"sudo iptables -A INPUT -i lo -j ACCEPT", desc:"Permite el tráfico del loopback (localhost).", flags:"Regla #1 SIEMPRE: sin esto tu propia máquina no puede hablarse a sí misma."},
-    {cmd:"sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT", desc:"Permite las conexiones YA establecidas y sus respuestas.", flags:"Regla #2 CRÍTICA: sin esto, todo tráfico saliente se corta al volver."},
-    {cmd:"sudo iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT", desc:"Abre el puerto 80 (HTTP) para el mundo.", flags:"El <b>-m tcp</b> explicita el módulo: en iptables moderno se carga solo con <b>-p tcp</b>, pero el formato explícito es más claro en guías y scripts."},
-    {cmd:"sudo iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT", desc:"Abre el puerto 443 (HTTPS) para el mundo."},
-    {cmd:"sudo iptables -A INPUT -p tcp -m tcp --dport 8080 -j ACCEPT", desc:"Abre el puerto 8080 (tu app web)."},
-    {cmd:"sudo iptables -A INPUT -s 172.20.1.100 -p tcp -m tcp --dport 22 -j ACCEPT", desc:"Permite SSH SOLO desde tu IP de administración.", flags:"<b>-s</b> = source: si restringís SSH por IP, las botnets de fuerza bruta ni te tocan."},
-    {cmd:"sudo iptables -A INPUT -s 172.20.1.100 -p icmp -j ACCEPT", desc:"Permite ping solo desde tu IP de administración."},
-    {cmd:"sudo iptables -A INPUT -s 172.20.1.100 -j ACCEPT", desc:"Regla catch-all: permite TODO el tráfico desde tu IP de confianza."},
-    {cmd:"sudo iptables -A INPUT -p udp -m udp --dport 161 -j ACCEPT", desc:"Abre SNMP (UDP 161) para monitoreo.", warn:"SNMP abierto al mundo permite enumerar tu servidor. Mejor restringilo anteponiendo <b>-s 172.20.1.100</b>, como en las reglas de SSH."},
-    {cmd:"sudo iptables -P INPUT DROP", desc:"POLÍTICA POR DEFECTO: descarta todo lo que no tenga regla explícita.", warn:"Corré esto al FINAL, con loopback, conntrack y SSH ya permitidos. Si lo corrés antes, te quedás AFUERA del servidor.", danger:true},
-    {cmd:"sudo iptables -D INPUT 5", desc:"Borra la regla número 5 de la cadena INPUT.", flags:"Usá <b>--line-numbers</b> primero para conocer el número exacto."},
-    {cmd:"sudo iptables -I INPUT 1 -s 1.2.3.4 -j DROP", desc:"Inserta una regla en la posición 1: bloquea una IP antes de las demás.", flags:"El orden importa: iptables evalúa de arriba a abajo y la PRIMERA coincidencia gana."},
-    {cmd:"sudo iptables -F", desc:"FLUSH: borra TODAS las reglas de todas las cadenas.", warn:"Con política DROP dejás de responder todo; con política ACCEPT quedás desprotegido. Solo para emergencias.", danger:true},
-    {cmd:"sudo iptables-save > /etc/iptables/rules.v4", desc:"Guarda las reglas actuales a disco para restaurarlas tras un reinicio.", flags:"Sin esto, todas tus reglas se PIERDEN al reiniciar el VPS."},
-    {cmd:"sudo iptables-restore < /etc/iptables/rules.v4", desc:"Restaura las reglas desde el archivo guardado."},
-    {cmd:"sudo apt install iptables-persistent", desc:"Instala el servicio que carga las reglas guardadas automáticamente en cada boot.", flags:"Después: <b>sudo netfilter-persistent save</b> guarda el estado actual. Este es el paso que hace tus reglas PERMANENTES."}
-  ]
-},
-{
-  id:"ssh", title:"SSH y acceso remoto", desc:"Endurecer el acceso remoto es el paso de seguridad más importante en un VPS.",
-  items:[
-    {cmd:"ssh usuario@ip -p 22", desc:"Conexión básica por SSH a un servidor."},
-    {cmd:"ssh-keygen -t ed25519 -C \"mail@ejemplo.com\"", desc:"Genera un par de llaves SSH modernas (más seguras que RSA)."},
-    {cmd:"ssh-copy-id usuario@ip", desc:"Copia tu llave pública al servidor para login sin contraseña."},
-    {cmd:"sudo nano /etc/ssh/sshd_config", desc:"Archivo de configuración principal del servidor SSH."},
-    {cmd:"PermitRootLogin no", desc:"Directiva dentro de sshd_config: desactiva el login directo como root."},
-    {cmd:"PasswordAuthentication no", desc:"Directiva: obliga a usar solo llaves SSH, no contraseñas."},
-    {cmd:"sudo systemctl restart ssh", desc:"Reinicia el servicio SSH tras editar la configuración."},
-    {cmd:"sudo adduser nuevo_usuario", desc:"Crea un usuario nuevo (mejor que operar siempre como root)."},
-    {cmd:"sudo usermod -aG sudo nuevo_usuario", desc:"Le da permisos de sudo a ese usuario."},
-    {cmd:"sudo usermod -aG docker nuevo_usuario", desc:"Permite ejecutar Docker sin anteponer sudo."}
-  ]
-},
-{
-  id:"nginx", title:"Nginx", desc:"Servidor web / proxy reverso: control del servicio, sitios virtuales y certificados.",
-  items:[
-    {cmd:"sudo systemctl status nginx", desc:"Estado actual del servicio Nginx."},
-    {cmd:"sudo systemctl reload nginx", desc:"Recarga la configuración sin cortar conexiones activas."},
-    {cmd:"sudo systemctl restart nginx", desc:"Reinicia el servicio completo (corta conexiones brevemente)."},
-    {cmd:"sudo nginx -t", desc:"Valida la sintaxis de la configuración antes de aplicarla.", flags:"Corré esto SIEMPRE antes de reload/restart."},
-    {cmd:"sudo nano /etc/nginx/sites-available/midominio", desc:"Archivo de configuración de un sitio virtual."},
-    {cmd:"sudo ln -s /etc/nginx/sites-available/midominio /etc/nginx/sites-enabled/", desc:"Habilita el sitio creando el symlink correspondiente."},
-    {cmd:"sudo rm /etc/nginx/sites-enabled/default", desc:"Elimina el sitio de bienvenida por defecto."},
-    {cmd:"tail -f /var/log/nginx/access.log", desc:"Sigue en vivo las peticiones entrantes al servidor."},
-    {cmd:"tail -f /var/log/nginx/error.log", desc:"Sigue en vivo los errores de Nginx (500, config, etc)."},
-    {cmd:"sudo certbot --nginx -d midominio.com", desc:"Obtiene e instala un certificado SSL gratuito con Let's Encrypt."},
-    {cmd:"sudo certbot renew --dry-run", desc:"Simula la renovación automática de certificados SSL."}
-  ]
-},
-{
-  id:"docker", title:"Docker", desc:"Contenedores para desplegar tus apps de forma aislada y reproducible.",
-  items:[
-    {cmd:"docker ps", desc:"Lista los contenedores en ejecución."},
-    {cmd:"docker ps -a", desc:"Lista TODOS los contenedores, incluidos los detenidos."},
-    {cmd:"docker images", desc:"Lista las imágenes descargadas localmente."},
-    {cmd:"docker run -d -p 8080:80 --name web nginx", desc:"Corre un contenedor en segundo plano mapeando puertos."},
-    {cmd:"docker stop nombre_contenedor", desc:"Detiene un contenedor en ejecución."},
-    {cmd:"docker start nombre_contenedor", desc:"Vuelve a iniciar un contenedor detenido."},
-    {cmd:"docker restart nombre_contenedor", desc:"Reinicia un contenedor."},
-    {cmd:"docker logs -f nombre_contenedor", desc:"Sigue en vivo los logs de un contenedor."},
-    {cmd:"docker exec -it nombre_contenedor bash", desc:"Abre una shell interactiva dentro del contenedor."},
-    {cmd:"docker rm nombre_contenedor", desc:"Elimina un contenedor detenido."},
-    {cmd:"docker rmi imagen", desc:"Elimina una imagen local."},
-    {cmd:"docker system prune -a", desc:"Limpia contenedores, imágenes y redes sin usar.", warn:"Elimina TODO lo que no esté corriendo activamente. Revisar antes de correr."},
-    {cmd:"docker build -t miapp .", desc:"Construye una imagen a partir del Dockerfile en el directorio actual."},
-    {cmd:"docker compose up -d", desc:"Levanta todos los servicios definidos en docker-compose.yml."},
-    {cmd:"docker compose down", desc:"Detiene y elimina los contenedores del compose."},
-    {cmd:"docker compose logs -f servicio", desc:"Sigue los logs de un servicio específico del compose."},
-    {cmd:"docker stats", desc:"Uso de CPU/RAM en tiempo real de cada contenedor."},
-    {cmd:"docker volume ls", desc:"Lista los volúmenes creados (datos persistentes gestionados por Docker)."},
-    {cmd:"docker volume create datos_app", desc:"Crea un volumen con nombre para persistir datos."},
-    {cmd:"docker volume inspect datos_app", desc:"Muestra el punto de montaje real y detalles del volumen.", flags:"Mirá el campo <b>Mountpoint</b>: ahí vive la data dentro del host."},
-    {cmd:"docker run -d -v datos_app:/var/lib/mysql mysql:8", desc:"Monta un volumen nombrado en el contenedor.", flags:"Formato <b>-v nombre_volumen:/ruta/dentro</b>. Si la ruta no existe, Docker la crea."},
-    {cmd:"docker run -d -v /home/usuario/midatos:/datos nginx", desc:"Bind mount: mapea un directorio real del host al contenedor.", flags:"Formato <b>-v /ruta/del/host:/ruta/dentro</b>. Diferencia clave vs. volumen nombrado: acá ves y editas los archivos directamente en el servidor."},
-    {cmd:"docker volume rm datos_app", desc:"Elimina un volumen concreto.", warn:"Borra TODOS los datos que contenía. No hay papelera en Docker."},
-    {cmd:"docker volume prune", desc:"Elimina todos los volúmenes que ningún contenedor esté usando.", warn:"PELIGRO: borra en masa. Revisá antes con <b>docker volume ls</b>. Ojo: docker system prune -a NO borra volúmenes, por eso existe este comando."},
-    {cmd:"docker network ls", desc:"Lista las redes de Docker (bridge, host, none)."},
-    {cmd:"docker network create mi_red", desc:"Crea una red bridge propia para aislar y comunicar tus contenedores.", flags:"Los contenedores de la MISMA red se hablan por NOMBRE, no por IP (DNS interno). Si tu app usa una BD en otro contenedor, conectá ambos a la red y usá <b>db:5432</b> en vez de una IP."},
-    {cmd:"docker run -d --network mi_red --name api miapp", desc:"Levanta un contenedor conectado a una red específica."},
-    {cmd:"docker network connect mi_red contenedor", desc:"Conecta un contenedor ya existente a una red.", flags:"Así un contenedor puede estar en VARIAS redes a la vez."},
-    {cmd:"docker network disconnect mi_red contenedor", desc:"Desconecta un contenedor de una red."},
-    {cmd:"docker network inspect mi_red", desc:"Muestra la configuración de la red y los contenedores conectados."},
-    {cmd:"docker network rm mi_red", desc:"Elimina una red.", warn:"Solo funciona si ningún contenedor sigue conectado."}
-  ]
-},
-{
-  id:"bases-datos", title:"Bases de datos (MySQL/MariaDB)", desc:"Conectar, crear usuarios y dar permisos: el día a día de cualquier app con base de datos.",
-  items:[
-    {cmd:"sudo systemctl status mysql", desc:"Estado del servicio de base de datos (MariaDB/MySQL)."},
-    {cmd:"sudo mysql_secure_installation", desc:"Endurece la instalación inicial: quita usuarios anónimos y bases de prueba.", flags:"Corré esto SIEMPRE después de instalar MySQL/MariaDB."},
-    {cmd:"sudo mysql", desc:"Entra al shell de MySQL como root SIN contraseña.", flags:"En Debian/Ubuntu el root usa <b>auth_socket</b>: solo funciona con sudo, directamente desde el sistema."},
-    {cmd:"mysql -u usuario -p", desc:"Conecta a MySQL como usuario normal pidiendo contraseña."},
-    {cmd:"SHOW DATABASES;", desc:"Lista las bases de datos existentes."},
-    {cmd:"CREATE DATABASE miapp CHARACTER SET utf8mb4;", desc:"Crea una base de datos nueva.", flags:"<b>utf8mb4</b> soporta emojis y caracteres especiales: es el estándar moderno."},
-    {cmd:"CREATE USER 'miapp'@'localhost' IDENTIFIED BY 'clave_segura';", desc:"Crea un usuario de BD.", flags:"Nunca uses la contraseña root en tu app: creá un usuario dedicado con permisos mínimos."},
-    {cmd:"GRANT ALL PRIVILEGES ON miapp.* TO 'miapp'@'localhost';", desc:"Da permisos totales SOLO sobre la BD miapp.", flags:"El <b>.*</b> limita los permisos a esa base: no otorgues ALL global sin necesidad."},
-    {cmd:"FLUSH PRIVILEGES;", desc:"Aplica los cambios de permisos sin reiniciar el servicio."},
-    {cmd:"USE miapp; SHOW TABLES;", desc:"Selecciona una BD y lista sus tablas."},
-    {cmd:"ALTER USER 'miapp'@'localhost' IDENTIFIED BY 'nueva_clave';", desc:"Cambia la contraseña de un usuario.", warn:"Actualizá también la config de tu app, o se queda sin conexión."},
-    {cmd:"sudo -u postgres psql", desc:"Entra al shell de PostgreSQL (la alternativa de BD que ya aparece en tus backups)."}
-  ]
-},
-{
-  id:"systemd", title:"Systemd (servicios)", desc:"Cómo controlar cualquier servicio del sistema: arrancar, detener, dejar autoarranque en boot.",
-  items:[
-    {cmd:"sudo systemctl status servicio", desc:"Estado actual de un servicio (activo, fallido, detenido)."},
-    {cmd:"sudo systemctl start servicio", desc:"Inicia un servicio."},
-    {cmd:"sudo systemctl stop servicio", desc:"Detiene un servicio."},
-    {cmd:"sudo systemctl restart servicio", desc:"Reinicia un servicio."},
-    {cmd:"sudo systemctl enable servicio", desc:"Hace que el servicio arranque automáticamente al reiniciar el VPS."},
-    {cmd:"sudo systemctl disable servicio", desc:"Quita el arranque automático."},
-    {cmd:"sudo systemctl list-units --type=service", desc:"Lista todos los servicios activos en el sistema."},
-    {cmd:"sudo nano /etc/systemd/system/miapp.service", desc:"Crea una unidad systemd propia para tu app (útil para FastAPI/Node sin PM2)."},
-    {cmd:"sudo systemctl daemon-reload", desc:"Recarga systemd tras crear o editar un archivo .service."},
-    {cmd:"sudo systemctl list-timers", desc:"Lista los temporizadores (timers) activos: la alternativa moderna a cron basada en systemd."},
-    {cmd:"sudo systemctl cat servicio", desc:"Muestra el contenido completo del archivo unit de un servicio, incluidos overrides."},
-    {cmd:"sudo systemctl edit servicio", desc:"Crea un archivo de override para modificar un servicio sin tocar el unit original."}
-  ]
-},
-{
-  id:"logs", title:"Logs y journalctl", desc:"Diagnóstico de fallas: dónde mirar cuando algo no funciona.",
-  items:[
-    {cmd:"journalctl -u nombre_servicio -f", desc:"Sigue en vivo los logs de un servicio systemd puntual."},
-    {cmd:"journalctl -xe", desc:"Últimos logs del sistema con contexto extendido, ideal tras un fallo."},
-    {cmd:"journalctl --since \"1 hour ago\"", desc:"Filtra logs por ventana de tiempo relativa."},
-    {cmd:"journalctl -b", desc:"Logs desde el último arranque del sistema."},
-    {cmd:"tail -f /var/log/syslog", desc:"Sigue en vivo el log general del sistema (Debian/Ubuntu)."},
-    {cmd:"tail -n 100 /var/log/auth.log", desc:"Últimas 100 líneas de intentos de autenticación (SSH, sudo)."},
-    {cmd:"grep \"Failed password\" /var/log/auth.log", desc:"Filtra intentos fallidos de login, útil para detectar ataques de fuerza bruta."},
-    {cmd:"sudo logrotate -f /etc/logrotate.conf", desc:"Fuerza la rotación de logs para liberar espacio en disco."}
-  ]
-},
-{
-  id:"cron", title:"Cron y tareas programadas", desc:"Automatizar backups, renovaciones y limpiezas periódicas.",
-  items:[
-    {cmd:"crontab -e", desc:"Edita las tareas programadas del usuario actual."},
-    {cmd:"crontab -l", desc:"Lista las tareas cron configuradas."},
-    {cmd:"0 3 * * * /ruta/backup.sh", desc:"Ejemplo de línea cron: corre un script todos los días a las 3am.", flags:"formato: <b>min hora día mes día-semana</b> comando"},
-    {cmd:"*/15 * * * * comando", desc:"Ejecuta un comando cada 15 minutos."},
-    {cmd:"sudo systemctl status cron", desc:"Verifica que el servicio cron esté activo."},
-    {cmd:"sudo nano /etc/cron.d/tarea", desc:"Alternativa: definir un cron a nivel sistema con usuario explícito."}
-  ]
-},
-{
-  id:"paquetes", title:"Gestión de paquetes", desc:"Instalar, actualizar y limpiar software del sistema (Debian/Ubuntu).",
-  items:[
-    {cmd:"sudo apt update", desc:"Actualiza el índice de paquetes disponibles.", flags:"Correr siempre antes de <b>upgrade</b> o <b>install</b>."},
-    {cmd:"sudo apt upgrade", desc:"Actualiza los paquetes instalados a su última versión."},
-    {cmd:"sudo apt full-upgrade", desc:"Como upgrade, pero permite instalar/quitar dependencias si hace falta."},
-    {cmd:"sudo apt install paquete", desc:"Instala un paquete nuevo."},
-    {cmd:"sudo apt remove paquete", desc:"Desinstala un paquete (deja configuración residual)."},
-    {cmd:"sudo apt purge paquete", desc:"Desinstala un paquete y su configuración por completo."},
-    {cmd:"sudo apt autoremove", desc:"Elimina dependencias huérfanas que ya no usa ningún paquete."},
-    {cmd:"apt list --installed", desc:"Lista todos los paquetes instalados en el sistema."},
-    {cmd:"dpkg -l | grep nombre", desc:"Busca si un paquete específico está instalado."},
-    {cmd:"sudo unattended-upgrades --dry-run", desc:"Simula las actualizaciones de seguridad automáticas configuradas."}
-  ]
-},
-{
-  id:"seguridad", title:"Seguridad", desc:"Hardening básico obligatorio en cualquier VPS expuesto a internet.",
-  items:[
-    {cmd:"sudo apt install fail2ban", desc:"Instala fail2ban: banea IPs tras varios intentos fallidos de login."},
-    {cmd:"sudo systemctl status fail2ban", desc:"Verifica que fail2ban esté activo."},
-    {cmd:"sudo fail2ban-client status sshd", desc:"Ver IPs baneadas actualmente para el jail de SSH."},
-    {cmd:"sudo fail2ban-client set sshd unbanip IP", desc:"Desbanea manualmente una IP."},
-    {cmd:"sudo nano /etc/fail2ban/jail.local", desc:"Archivo de configuración local de fail2ban (no tocar jail.conf directo)."},
-    {cmd:"sudo passwd -l root", desc:"Bloquea el login directo con contraseña del usuario root."},
-    {cmd:"sudo apt install unattended-upgrades", desc:"Habilita actualizaciones de seguridad automáticas."},
-    {cmd:"sudo lynis audit system", desc:"Corre una auditoría de seguridad completa del servidor."},
-    {cmd:"sudo ss -tulpn | grep LISTEN", desc:"Revisa qué puertos están escuchando; cerrá los que no uses."}
-  ]
-},
-{
-  id:"backups", title:"Backups y transferencia", desc:"Nunca confíes solo en el proveedor del VPS: automatizá tus propias copias.",
-  items:[
-    {cmd:"rsync -avz -e ssh /ruta/local usuario@ip:/ruta/remota", desc:"Sincroniza una carpeta local hacia un servidor remoto por SSH."},
-    {cmd:"mysqldump -u usuario -p basededatos > backup.sql", desc:"Exporta una base de datos MySQL/MariaDB a un archivo .sql."},
-    {cmd:"mysql -u usuario -p basededatos < backup.sql", desc:"Restaura una base de datos desde un archivo .sql."},
-    {cmd:"pg_dump -U usuario basededatos > backup.sql", desc:"Exporta una base de datos PostgreSQL."},
-    {cmd:"scp backup.tar.gz usuario@ip:/ruta/", desc:"Copia un archivo de backup hacia otro servidor."},
-    {cmd:"crontab -e  →  0 2 * * * /ruta/backup.sh", desc:"Programa un backup automático diario a las 2am."}
-  ]
-},
-{
-  id:"monitoreo", title:"Monitoreo y disco", desc:"Vigilar el estado del servidor antes de que un problema se vuelva downtime.",
-  items:[
-    {cmd:"df -h", desc:"Espacio en disco por partición, en formato legible."},
-    {cmd:"du -sh /var/log/*", desc:"Encuentra qué logs están ocupando más espacio."},
-    {cmd:"free -h", desc:"RAM y swap disponible."},
-    {cmd:"vmstat 2 5", desc:"Estadísticas de memoria, CPU e I/O cada 2 segundos, 5 veces."},
-    {cmd:"watch -n 2 docker stats --no-stream", desc:"Refresca cada 2 segundos el consumo de contenedores Docker."},
-    {cmd:"sudo apt install netdata", desc:"Dashboard web de monitoreo en tiempo real, liviano de instalar."},
-    {cmd:"uptime", desc:"Load average: si supera la cantidad de núcleos de forma sostenida, hay cuello de botella."},
-    {cmd:"ncdu /ruta", desc:"Analizador de espacio en disco interactivo y visual, más rápido de navegar que du.", flags:"Instalar con: <b>sudo apt install ncdu</b>."},
-    {cmd:"iftop", desc:"Monitor de ancho de banda en tiempo real por conexión activa.", flags:"Instalar con: <b>sudo apt install iftop</b>. Requiere sudo."}
-  ]
-},
-{
-  id:"bash", title:"Bash y configuración de shell", desc:"Personalizá tu terminal: alias, variables de entorno, historial y el prompt son las primeras ganancias de productividad en un VPS.",
-  items:[
-    {cmd:"cat ~/.bashrc", desc:"Archivo de configuración de bash para el usuario actual: alias, funciones y variables de entorno."},
-    {cmd:"nano ~/.bashrc", desc:"Edita la configuración de bash del usuario."},
-    {cmd:"source ~/.bashrc", desc:"Recarga la configuración de bash en la sesión actual sin cerrar sesión."},
-    {cmd:"alias ll='ls -lah'", desc:"Crea un atajo para un comando largo.", flags:"Agregalo al final de <b>~/.bashrc</b> para que persista entre sesiones."},
-    {cmd:"unalias ll", desc:"Elimina un alias definido previamente en la sesión actual."},
-    {cmd:"export PATH=$PATH:/ruta/nueva", desc:"Agrega un directorio al PATH para ejecutar binarios sin escribir la ruta completa."},
-    {cmd:"export EDITOR=nano", desc:"Define el editor por defecto usado por comandos como crontab -e o visudo."},
-    {cmd:"history", desc:"Muestra el historial de comandos ejecutados en la sesión."},
-    {cmd:"HISTSIZE=5000 HISTFILESIZE=10000", desc:"Variables en .bashrc que controlan cuántos comandos se guardan en memoria y en disco."},
-    {cmd:"cat ~/.bash_profile", desc:"Se ejecuta solo en shells de login (ej. al conectarte por SSH), a diferencia de .bashrc que corre en shells interactivas no-login.", flags:"En Debian/Ubuntu normalmente <b>~/.profile</b> hace <b>source</b> de .bashrc automáticamente."},
-    {cmd:"echo $PS1", desc:"Muestra el formato actual del prompt (usuario@host:ruta$)."},
-    {cmd:"type comando", desc:"Muestra si un comando es un alias, función, builtin o binario, y de dónde viene.", flags:"Útil para depurar por qué un alias no se aplica como esperás."},
-    {cmd:"which comando", desc:"Muestra la ruta absoluta del binario que se ejecutaría."},
-    {cmd:"chsh -s /bin/bash usuario", desc:"Cambia la shell por defecto de un usuario (ej. de sh a bash o zsh)."},
-    {cmd:"cat /etc/environment", desc:"Variables de entorno globales para todos los usuarios del sistema, sin depender de un shell interactivo."}
-  ]
-}
-,{
-  id:"pm2", title:"PM2 (gestor de procesos Node.js)", desc:"Alternativa a systemd para apps Node.js: reinicios automáticos, modo cluster y logs centralizados sin escribir un .service a mano.",
-  items:[
-    {cmd:"npm install -g pm2", desc:"Instala PM2 globalmente en el sistema."},
-    {cmd:"pm2 start app.js --name \"miapp\"", desc:"Inicia una app Node.js con PM2 y le asigna un nombre identificable."},
-    {cmd:"pm2 list", desc:"Lista todas las apps gestionadas por PM2 con su estado, PID y consumo."},
-    {cmd:"pm2 stop miapp", desc:"Detiene una app sin eliminarla del listado de PM2."},
-    {cmd:"pm2 restart miapp", desc:"Reinicia una app, típico después de hacer un deploy."},
-    {cmd:"pm2 reload miapp", desc:"Recarga la app sin downtime.", flags:"Solo funciona en <b>modo cluster</b> (-i)."},
-    {cmd:"pm2 delete miapp", desc:"Elimina una app del listado de PM2 (no borra el código)."},
-    {cmd:"pm2 logs miapp", desc:"Sigue en vivo los logs (stdout/stderr) de una app puntual."},
-    {cmd:"pm2 monit", desc:"Monitor interactivo de CPU y memoria por cada proceso gestionado."},
-    {cmd:"pm2 describe miapp", desc:"Info detallada de un proceso: memoria, uptime, cantidad de reinicios."},
-    {cmd:"pm2 start app.js -i max", desc:"Levanta la app en modo cluster usando todos los núcleos de CPU disponibles."},
-    {cmd:"pm2 save", desc:"Guarda la lista actual de procesos para poder restaurarla tras un reinicio del VPS."},
-    {cmd:"pm2 startup", desc:"Genera el comando systemd necesario para que PM2 arranque automáticamente al bootear.", flags:"Copiá y corré el comando que imprime, con <b>sudo</b>."},
-    {cmd:"pm2 resurrect", desc:"Restaura los procesos guardados previamente con pm2 save."},
-    {cmd:"pm2 flush", desc:"Limpia todos los logs acumulados de PM2."},
-    {cmd:"pm2 delete all", desc:"Elimina TODAS las apps gestionadas por PM2.", danger:true, warn:"Corta todos los procesos Node en producción. Verificá dos veces antes de correrlo."}
-  ]
-},
-{
-  id:"git", title:"Git y despliegue", desc:"Cómo llega tu código al servidor: clonar, actualizar y hacer deploy desde el repo.",
-  items:[
-    {cmd:"git clone git@github.com:usuario/mirepo.git", desc:"Clona tu repositorio por SSH (requiere deploy key configurada)."},
-    {cmd:"git pull origin main", desc:"Actualiza el código en producción con los últimos cambios.", flags:"Es el corazón del deploy: <b>pull → instalar dependencias → reiniciar el servicio</b>."},
-    {cmd:"git status", desc:"Estado del working directory: qué cambió y qué falta commitear."},
-    {cmd:"git log --oneline -10", desc:"Últimos 10 commits en una línea cada uno."},
-    {cmd:"git stash", desc:"Guarda temporalmente cambios sin commitear para poder hacer pull limpio."},
-    {cmd:"git stash pop", desc:"Recupera los cambios que guardaste con stash."},
-    {cmd:"git remote -v", desc:"Muestra los repositorios remotos configurados (origin, etc)."},
-    {cmd:"git checkout -- .", desc:"Descarta TODOS los cambios locales sin commitear.", warn:"Pérdida irreversible de cambios no commiteados."},
-    {cmd:"git reset --hard origin/main", desc:"Fuerza el servidor al estado exacto del remoto, borrando diferencias.", danger:true, warn:"Sobrescribe cualquier cambio local. Usar solo cuando sabés que el remoto es la verdad."},
-    {cmd:"cat ~/.ssh/id_ed25519.pub", desc:"Obtiene tu llave pública para registrarla como <b>deploy key</b> en GitHub (repo read-only).", flags:"Las deploy keys con acceso read-only evitan que el servidor pueda modificar tu repo."},
-    {cmd:"git pull origin main && npm install && pm2 restart miapp", desc:"Ejemplo de deploy completo en una línea para una app Node.", flags:"Cadena de comandos con <b>&&</b>: solo continúa si el paso anterior funcionó."}
-  ]
-}
-];
-
-const toc = document.getElementById('toc');
-const content = document.getElementById('content');
-
-DATA.forEach((cat, i)=>{
-  const a = document.createElement('a');
-  a.href = '#'+cat.id;
-  a.innerHTML = `<span class="n">${String(i+1).padStart(2,'0')}</span> ${cat.title}`;
-  a.dataset.target = cat.id;
-  toc.appendChild(a);
-
-  const sec = document.createElement('section');
-  sec.className = 'cat';
-  sec.id = cat.id;
-  sec.innerHTML = `
-    <div class="cat-head"><span class="cat-num">${String(i+1).padStart(2,'0')}</span><h2>${cat.title}</h2></div>
-    <p class="cat-desc">${cat.desc}</p>
-    <div class="grid"></div>
-  `;
-  const grid = sec.querySelector('.grid');
-  cat.items.forEach(item=>{
-    const card = document.createElement('div');
-    card.className = 'card' + (item.danger ? ' danger' : '');
-    card.dataset.search = (item.cmd + ' ' + item.desc).toLowerCase();
-    card.innerHTML = `
-      <div class="cmdline">
-        <span class="prompt">$</span>
-        <code>${escapeHtml(item.cmd)}</code>
-        <button class="copybtn" data-cmd="${escapeAttr(item.cmd)}">copiar</button>
-      </div>
-      <p>${item.desc}</p>
-      ${item.flags ? `<div class="flags">${item.flags}</div>` : ''}
-      ${item.warn ? `<div class="warn">⚠ ${item.warn}</div>` : ''}
-    `;
-    grid.appendChild(card);
-  });
-  content.appendChild(sec);
-});
-
 function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function escapeAttr(s){return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
 
-// copy to clipboard
-content.addEventListener('click', e=>{
-  const btn = e.target.closest('.copybtn');
-  if(!btn) return;
-  const text = btn.getAttribute('data-cmd');
-  navigator.clipboard.writeText(text).then(()=>{
-    const original = btn.textContent;
-    btn.textContent = '✓ copiado';
-    btn.classList.add('copied');
-    setTimeout(()=>{ btn.textContent = original; btn.classList.remove('copied'); }, 1400);
-  });
-});
-
-// search filter
-const search = document.getElementById('search');
-search.addEventListener('input', ()=>{
-  const q = search.value.trim().toLowerCase();
-  document.querySelectorAll('section.cat').forEach(sec=>{
-    let visibleCount = 0;
-    sec.querySelectorAll('.card').forEach(card=>{
-      const match = !q || card.dataset.search.includes(q);
-      card.classList.toggle('filtered-hide', !match);
-      if(match) visibleCount++;
-    });
-    sec.classList.toggle('filtered-hide', visibleCount===0);
-  });
-});
-document.addEventListener('keydown', e=>{
-  if(e.key === '/' && document.activeElement !== search){ e.preventDefault(); search.focus(); }
-});
-
-// active toc highlight on scroll
-const sections = document.querySelectorAll('section.cat');
-const tocLinks = toc.querySelectorAll('a');
-const obs = new IntersectionObserver((entries)=>{
-  entries.forEach(entry=>{
-    if(entry.isIntersecting){
-      tocLinks.forEach(l=>l.classList.remove('active'));
-      const link = toc.querySelector(`a[data-target="${entry.target.id}"]`);
-      if(link) link.classList.add('active');
-    }
-  });
-}, {rootMargin:'-20% 0px -70% 0px'});
-sections.forEach(s=>obs.observe(s));
-
-// theme toggle
+// theme toggle (independiente de la carga de datos)
 const themeToggle = document.getElementById('theme-toggle');
 if(themeToggle){
   themeToggle.addEventListener('click', ()=>{
@@ -475,3 +11,102 @@ if(themeToggle){
     try{ localStorage.setItem('theme', next); }catch(e){}
   });
 }
+
+async function init(){
+  let DATA;
+  try{
+    const res = await fetch('./js/data.json');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    DATA = await res.json();
+  }catch(e){
+    document.getElementById('content').innerHTML =
+      '<div class="empty-state">⚠ No se pudo cargar <b>js/data.json</b> (' + escapeHtml(e.message) + ').' +
+      '<br>Este sitio ahora se sirve por HTTP: corré <b>python -m http.server</b> en la carpeta del proyecto, o subilo a GitHub Pages.</div>';
+    return;
+  }
+
+  const toc = document.getElementById('toc');
+  const content = document.getElementById('content');
+
+  DATA.forEach((cat, i)=>{
+    const a = document.createElement('a');
+    a.href = '#'+cat.id;
+    a.innerHTML = `<span class="n">${String(i+1).padStart(2,'0')}</span> ${cat.title}`;
+    a.dataset.target = cat.id;
+    toc.appendChild(a);
+
+    const sec = document.createElement('section');
+    sec.className = 'cat';
+    sec.id = cat.id;
+    sec.innerHTML = `
+      <div class="cat-head"><span class="cat-num">${String(i+1).padStart(2,'0')}</span><h2>${cat.title}</h2></div>
+      <p class="cat-desc">${cat.desc}</p>
+      <div class="grid"></div>
+    `;
+    const grid = sec.querySelector('.grid');
+    cat.items.forEach(item=>{
+      const card = document.createElement('div');
+      card.className = 'card' + (item.danger ? ' danger' : '');
+      card.dataset.search = (item.cmd + ' ' + item.desc).toLowerCase();
+      card.innerHTML = `
+        <div class="cmdline">
+          <span class="prompt">$</span>
+          <code>${escapeHtml(item.cmd)}</code>
+          <button class="copybtn" data-cmd="${escapeAttr(item.cmd)}">copiar</button>
+        </div>
+        <p>${item.desc}</p>
+        ${item.flags ? `<div class="flags">${item.flags}</div>` : ''}
+        ${item.warn ? `<div class="warn">⚠ ${item.warn}</div>` : ''}
+      `;
+      grid.appendChild(card);
+    });
+    content.appendChild(sec);
+  });
+
+  // copy to clipboard
+  content.addEventListener('click', e=>{
+    const btn = e.target.closest('.copybtn');
+    if(!btn) return;
+    const text = btn.getAttribute('data-cmd');
+    navigator.clipboard.writeText(text).then(()=>{
+      const original = btn.textContent;
+      btn.textContent = '✓ copiado';
+      btn.classList.add('copied');
+      setTimeout(()=>{ btn.textContent = original; btn.classList.remove('copied'); }, 1400);
+    });
+  });
+
+  // search filter
+  const search = document.getElementById('search');
+  search.addEventListener('input', ()=>{
+    const q = search.value.trim().toLowerCase();
+    document.querySelectorAll('section.cat').forEach(sec=>{
+      let visibleCount = 0;
+      sec.querySelectorAll('.card').forEach(card=>{
+        const match = !q || card.dataset.search.includes(q);
+        card.classList.toggle('filtered-hide', !match);
+        if(match) visibleCount++;
+      });
+      sec.classList.toggle('filtered-hide', visibleCount===0);
+    });
+  });
+  document.addEventListener('keydown', e=>{
+    if(e.key === '/' && document.activeElement !== search){ e.preventDefault(); search.focus(); }
+  });
+
+  // active toc highlight on scroll
+  const sections = document.querySelectorAll('section.cat');
+  const tocLinks = toc.querySelectorAll('a');
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        tocLinks.forEach(l=>l.classList.remove('active'));
+        const link = toc.querySelector(`a[data-target="${entry.target.id}"]`);
+        if(link) link.classList.add('active');
+      }
+    });
+  }, {rootMargin:'-20% 0px -70% 0px'});
+  sections.forEach(s=>obs.observe(s));
+}
+
+init();
