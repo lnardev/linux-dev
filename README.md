@@ -26,7 +26,7 @@ xdg-open index.html # Linux
 - **Copia con un clic** — cada comando tiene un botón "copiar" para pegarlo directo en la terminal
 - **22 categorías** organizadas por tema
 - **Sin dependencias** — todo el HTML, CSS y JS vive en un solo archivo
-- **Tema terminal** — interfaz oscura con estética de terminal real
+- **Tema terminal** — modo oscuro y claro con persistencia y preferencia del sistema
 - **Navegación lateral** — TOC sticky con highlight por scroll
 - **Warnings visuales** — comandos destructivos marcados en rojo con advertencias
 - **Responsive** — funciona en desktop y mobile

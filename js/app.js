@@ -464,3 +464,14 @@ const obs = new IntersectionObserver((entries)=>{
   });
 }, {rootMargin:'-20% 0px -70% 0px'});
 sections.forEach(s=>obs.observe(s));
+
+// theme toggle
+const themeToggle = document.getElementById('theme-toggle');
+if(themeToggle){
+  themeToggle.addEventListener('click', ()=>{
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    try{ localStorage.setItem('theme', next); }catch(e){}
+  });
+}
