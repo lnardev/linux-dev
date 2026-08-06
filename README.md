@@ -1,6 +1,6 @@
 # 🖥️ root@vps — Manual de Autogestión de un VPS
 
-> Página estática HTML autocontenida con +180 comandos de Linux para administrar tu propio servidor. Sin dependencias externas, sin build tools, sin frameworks.
+> Página estática HTML autocontenida con +250 comandos de Linux para administrar tu propio servidor. Sin dependencias externas, sin build tools, sin frameworks.
 
 ## ¿Qué es esto?
 
@@ -24,7 +24,7 @@ xdg-open index.html # Linux
 
 - **Búsqueda en tiempo real** — filtrá comandos escribiendo en la barra superior (o presioná `/`)
 - **Copia con un clic** — cada comando tiene un botón "copiar" para pegarlo directo en la terminal
-- **17 categorías** organizadas por tema
+- **21 categorías** organizadas por tema
 - **Sin dependencias** — todo el HTML, CSS y JS vive en un solo archivo
 - **Tema terminal** — interfaz oscura con estética de terminal real
 - **Navegación lateral** — TOC sticky con highlight por scroll
@@ -35,13 +35,15 @@ xdg-open index.html # Linux
 
 ```
 linux-commands/
-├── index.html    ← Todo vive aquí: HTML + CSS + JS + datos
+├── index.html      ← Página principal (estructura HTML)
+├── css/styles.css  ← Estilos (tema terminal)
+├── js/app.js       ← Datos (array DATA) + lógica de renderizado
 ├── README.md
 ├── AGENTS.md
 └── CLAUDE.md
 ```
 
-**No hay nada más.** Un solo archivo autocontenido. Así de simple.
+**Sin build tools ni dependencias**: HTML + CSS + JS planos — abrís `index.html` y funciona.
 
 ## 📋 Categorías
 
@@ -49,25 +51,29 @@ linux-commands/
 |---|-----------|-------------|
 | 01 | Sistema e información | Kernel, distro, uptime, hardware |
 | 02 | Archivos, directorios y permisos | Navegación del filesystem y control de acceso |
-| 03 | Procesos y rendimiento | CPU, RAM, matar procesos colgados |
-| 04 | Red y conectividad | Diagnóstico, puertos, DNS |
-| 05 | Firewall (UFW) | Primera línea de defensa del VPS |
-| 06 | SSH y acceso remoto | Endurecimiento y autenticación por llaves |
-| 07 | Nginx | Servidor web / proxy reverso, SSL |
-| 08 | Docker | Contenedores, compose, imágenes |
-| 09 | Systemd (servicios) | Control de servicios, autoarranque |
-| 10 | Logs y journalctl | Diagnóstico de fallas |
-| 11 | Cron y tareas programadas | Automatización de backups y limpiezas |
-| 12 | Gestión de paquetes | apt, dpkg, actualizaciones |
-| 13 | Seguridad | fail2ban, hardening, auditorías |
-| 14 | Backups y transferencia | rsync, dumps de BD, programación |
-| 15 | Monitoreo y disco | Uso de disco, RAM, herramientas visuales |
-| 16 | Bash y configuración de shell | Alias, variables, prompt, historial |
-| 17 | PM2 (gestor de procesos Node.js) | Reinicios, cluster, logs de Node |
+| 03 | Procesamiento de texto (grep, sed, awk) | Buscar, reemplazar y extraer información de archivos |
+| 04 | Procesos y rendimiento | CPU, RAM, matar procesos colgados |
+| 05 | Swap (memoria virtual) | Respaldo de RAM para VPS con poca memoria |
+| 06 | Red y conectividad | Diagnóstico, puertos, DNS |
+| 07 | Firewall (UFW) | Primera línea de defensa del VPS |
+| 08 | SSH y acceso remoto | Endurecimiento y autenticación por llaves |
+| 09 | Nginx | Servidor web / proxy reverso, SSL |
+| 10 | Docker | Contenedores, volúmenes, redes, compose |
+| 11 | Bases de datos (MySQL/MariaDB) | Conectar, crear usuarios, permisos |
+| 12 | Systemd (servicios) | Control de servicios, autoarranque |
+| 13 | Logs y journalctl | Diagnóstico de fallas |
+| 14 | Cron y tareas programadas | Automatización de backups y limpiezas |
+| 15 | Gestión de paquetes | apt, dpkg, actualizaciones |
+| 16 | Seguridad | fail2ban, hardening, auditorías |
+| 17 | Backups y transferencia | rsync, dumps de BD, programación |
+| 18 | Monitoreo y disco | Uso de disco, RAM, herramientas visuales |
+| 19 | Bash y configuración de shell | Alias, variables, prompt, historial |
+| 20 | PM2 (gestor de procesos Node.js) | Reinicios, cluster, logs de Node |
+| 21 | Git y despliegue | Clonar, deploy keys, actualizar producción |
 
 ## 🛠️ Cómo editar / contribuir
 
-Todo el contenido vive en el array `DATA` dentro del `<script>` de `index.html` (~línea 173).
+Todo el contenido vive en el array `DATA` de `js/app.js`.
 
 Cada categoría tiene esta estructura:
 
@@ -92,7 +98,7 @@ Cada categoría tiene esta estructura:
 
 - El contenido está en **español** — mantener consistencia
 - **No escapar** `cmd` ni `desc` — el JS lo hace automáticamente con `escapeHtml`/`escapeAttr`
-- Si agregás o quitás una categoría, **actualizá el número en el footer** (`17 categorías · ...`)
+- Si agregás o quitás una categoría, **actualizá el número en el footer** (`21 categorías · ...`)
 - Para que un comando sea buscable, incluí palabras clave en `desc` — el filtro busca en `cmd + desc`
 
 ## 🧪 Verificación

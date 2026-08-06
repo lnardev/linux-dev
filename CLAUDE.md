@@ -19,6 +19,6 @@ Static HTML page (`index.html`) with separate CSS (`styles.css`) and JS (`app.js
 - Content language is Spanish — keep new entries in Spanish for consistency.
 
 ## Gotchas
-- The footer text `"17 categorías · generado para uso local · sin dependencias externas"` hardcodes the category count. If you add/remove a top-level category in `DATA`, update this number manually — it is NOT auto-computed.
+- The footer text `"21 categorías · generado para uso local · sin dependencias externas"` hardcodes the category count. If you add/remove a top-level category in `DATA`, update this number manually — it is NOT auto-computed.
 - `cmd` and `desc` strings are escaped via `escapeHtml`/`escapeAttr` before rendering — don't pre-escape them yourself in `DATA`.
 - Search filtering matches against `cmd + ' ' + desc` (lowercased) via `data-search` attribute — keep relevant keywords in `desc` if you want an item discoverable by search.
